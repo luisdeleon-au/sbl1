@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBL Designer — Professor De León</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #F74E53;
+  --teal: #26C0BB;
+  --navy: #0D1B2A;
+  --dk: #1A2E42;
+  --drow: #0F1E2D;
+  --white: #FFFFFF;
+  --lgray: #E8EDF2;
+  --mgray: #8FA3B1;
+  --gold: #F5A623;
+  --font: 'Inter', -apple-system, sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: var(--font);
+  background: var(--navy);
+  color: var(--lgray);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════ HEADER ═══════ */
+.app-header {
+  background: var(--dk);
+  border-bottom: 3px solid var(--teal);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { display:flex; align-items:center; gap:12px; }
+.brand-icon {
+  width: 40px; height: 40px;
+  background: var(--teal);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 800; color: var(--navy);
+}
+.brand-text h1 { font-size:1.1rem; font-weight:700; color:var(--white); letter-spacing:-0.3px; }
+.brand-text span { font-size:0.7rem; color:var(--mgray); text-transform:uppercase; letter-spacing:1.5px; }
+
+.api-status {
+  font-size: 0.75rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.status-dot {
+  width:8px; height:8px; border-radius:50%;
+  background: var(--coral);
+  animation: pulse 2s infinite;
+}
+.status-dot.connected { background: var(--teal); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ═══════ PHASE NAV ═══════ */
+.phase-nav {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 1.5rem 2rem 0;
+}
+.phase-tab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0.85rem 1.8rem;
+  background: var(--dk);
+  border: 2px solid transparent;
+  color: var(--mgray);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+.phase-tab:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.phase-tab:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.phase-tab.active { background: var(--drow); color: var(--white); border-color: var(--teal); }
+.phase-tab.completed { color: var(--teal); }
+.phase-tab.locked { opacity:0.5; cursor:not-allowed; }
+.phase-num {
+  width:24px; height:24px; border-radius:50%;
+  background: var(--dk); border: 2px solid var(--mgray);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.7rem; font-weight:800;
+  transition: all 0.3s;
+}
+.phase-tab.active .phase-num { background:var(--teal); border-color:var(--teal); color:var(--navy); }
+.phase-tab.completed .phase-num { background:var(--teal); border-color:var(--teal); color:var(--navy); }
+
+/* ═══════ PHASE CONTENT ═══════ */
+.phase-content { max-width:1100px; margin:0 auto; padding:2rem; }
+.phase-panel { display:none; animation: fadeSlide 0.5s ease; }
+.phase-panel.active { display:block; }
+@keyframes fadeSlide { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
+
+/* ═══════ FORM STYLES ═══════ */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
+.form-group { display:flex; flex-direction:column; gap:0.4rem; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:0.8rem; font-weight:600; color:var(--mgray); text-transform:uppercase; letter-spacing:1px; }
+.form-input, .form-select, .form-textarea {
+  background: var(--drow);
+  border: 2px solid var(--dk);
+  color: var(--white);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline:none; border-color: var(--teal);
+}
+.form-select option { background: var(--dk); color: var(--white); }
+.form-textarea { min-height:80px; resize:vertical; }
+
+/* ═══════ BUTTONS ═══════ */
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 0.85rem 2rem;
+  border:none; border-radius: var(--radius-sm);
+  font-family:var(--font); font-size:0.95rem; font-weight:700;
+  cursor:pointer; transition: all 0.3s;
+  text-transform:uppercase; letter-spacing:0.5px;
+}
+.btn-primary { background:var(--teal); color:var(--navy); }
+.btn-primary:hover { background:#2dd4c8; transform:translateY(-2px); box-shadow:0 8px 25px rgba(38,192,187,0.3); }
+.btn-coral { background:var(--coral); color:var(--white); }
+.btn-coral:hover { background:#ff6166; transform:translateY(-2px); box-shadow:0 8px 25px rgba(247,78,83,0.3); }
+.btn-gold { background:var(--gold); color:var(--navy); }
+.btn-gold:hover { background:#ffb740; transform:translateY(-2px); }
+.btn-ghost { background:transparent; border:2px solid var(--teal); color:var(--teal); }
+.btn-ghost:hover { background:var(--teal); color:var(--navy); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
+.btn-sm { padding:0.5rem 1.2rem; font-size:0.8rem; }
+
+/* ═══════ CARDS ═══════ */
+.card {
+  background: var(--dk);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.card-accent { border-left: 4px solid var(--teal); }
+.card-title { font-size:1.1rem; font-weight:700; color:var(--white); margin-bottom:0.5rem; }
+.card-subtitle { font-size:0.8rem; color:var(--mgray); margin-bottom:1rem; }
+
+/* ═══════ SCENARIO DISPLAY ═══════ */
+.scenario-card {
+  background: var(--dk);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes scaleIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+
+.scenario-header {
+  background: linear-gradient(135deg, var(--drow), var(--dk));
+  padding: 1.5rem;
+  border-bottom: 3px solid var(--teal);
+}
+.scenario-header h2 { font-size:1.4rem; font-weight:800; color:var(--white); margin-bottom:0.3rem; }
+.scenario-header .tag {
+  display:inline-block; padding:0.25rem 0.75rem;
+  background:var(--teal); color:var(--navy); font-size:0.7rem;
+  font-weight:700; border-radius:20px; text-transform:uppercase;
+}
+
+.scenario-body { padding:1.5rem; }
+.scenario-section { margin-bottom:1.2rem; }
+.scenario-section h3 {
+  font-size:0.8rem; font-weight:700; color:var(--teal);
+  text-transform:uppercase; letter-spacing:1.5px; margin-bottom:0.4rem;
+}
+.scenario-section p { font-size:0.95rem; color:var(--lgray); line-height:1.6; }
+
+.character-card {
+  display:flex; align-items:center; gap:1rem;
+  background:var(--drow); border-radius:var(--radius-sm); padding:1rem;
+  border-left:4px solid var(--coral);
+}
+.character-avatar {
+  width:50px; height:50px; border-radius:50%;
+  background:var(--coral); display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; font-weight:800; color:var(--white);
+}
+.character-info h4 { font-size:0.95rem; font-weight:700; color:var(--white); }
+.character-info p { font-size:0.8rem; color:var(--mgray); }
+
+/* ═══════ DECISION CARDS ═══════ */
+.decisions-grid { display:flex; flex-direction:column; gap:0.8rem; }
+.decision-moment {
+  background:var(--drow); border-radius:var(--radius-sm); padding:1.2rem;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.decision-moment h4 {
+  font-size:0.9rem; font-weight:700; color:var(--gold);
+  margin-bottom:0.4rem;
+}
+.decision-moment .context { font-size:0.85rem; color:var(--mgray); margin-bottom:0.6rem; }
+.decision-moment .question { font-size:0.95rem; color:var(--white); font-weight:600; margin-bottom:0.6rem; }
+.options-list { display:flex; flex-direction:column; gap:0.4rem; }
+.option-item {
+  display:flex; align-items:flex-start; gap:0.6rem;
+  padding:0.6rem 0.8rem;
+  background:rgba(255,255,255,0.03); border-radius:6px;
+  font-size:0.85rem;
+}
+.option-badge {
+  min-width:24px; height:24px; border-radius:50%;
+  background:var(--dk); border:2px solid var(--mgray);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.7rem; font-weight:800; color:var(--mgray);
+}
+
+/* ═══════ REFINE PANEL ═══════ */
+.refine-actions {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:0.8rem;
+  margin-bottom:1.2rem;
+}
+.refine-btn {
+  display:flex; align-items:center; gap:8px;
+  padding:0.8rem 1rem;
+  background:var(--drow); border:2px solid var(--dk);
+  color:var(--lgray); border-radius:var(--radius-sm);
+  font-family:var(--font); font-size:0.85rem; font-weight:500;
+  cursor:pointer; transition:all 0.3s;
+}
+.refine-btn:hover { border-color:var(--teal); color:var(--white); }
+.refine-btn.active { border-color:var(--teal); background:rgba(38,192,187,0.1); color:var(--teal); }
+.refine-icon { font-size:1.2rem; }
+
+/* ═══════ PLAY MODE ═══════ */
+.play-container { position:relative; }
+.play-narrative {
+  background: linear-gradient(135deg, var(--drow), var(--dk));
+  border-radius: var(--radius);
+  padding: 2rem;
+  border: 1px solid rgba(38,192,187,0.2);
+  margin-bottom: 1.5rem;
+  animation: fadeSlide 0.8s ease;
+}
+.play-narrative .emotion-badge {
+  display:inline-block; padding:0.3rem 1rem;
+  background:var(--coral); color:var(--white);
+  border-radius:20px; font-size:0.75rem; font-weight:700;
+  text-transform:uppercase; margin-bottom:0.8rem;
+}
+.play-narrative p { font-size:1.05rem; line-height:1.8; color:var(--lgray); }
+.play-narrative .lesson {
+  margin-top:1rem; padding-top:1rem;
+  border-top:1px solid rgba(255,255,255,0.1);
+  font-size:0.9rem; color:var(--teal); font-style:italic;
+}
+
+.play-choices { display:flex; flex-direction:column; gap:0.8rem; }
+.play-choice {
+  display:flex; align-items:center; gap:1rem;
+  padding:1.2rem 1.5rem;
+  background:var(--dk);
+  border:2px solid var(--dk);
+  border-radius:var(--radius-sm);
+  cursor:pointer; transition:all 0.3s;
+}
+.play-choice:hover {
+  border-color:var(--teal);
+  background:rgba(38,192,187,0.05);
+  transform:translateX(8px);
+}
+.play-choice-letter {
+  min-width:36px; height:36px; border-radius:50%;
+  background:var(--teal); color:var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:0.9rem;
+}
+.play-choice-text { font-size:0.95rem; color:var(--white); font-weight:500; }
+
+.play-progress {
+  display:flex; gap:0.5rem; justify-content:center; margin-bottom:1.5rem;
+}
+.play-dot {
+  width:12px; height:12px; border-radius:50%;
+  background:var(--dk); border:2px solid var(--mgray);
+  transition:all 0.3s;
+}
+.play-dot.active { background:var(--teal); border-color:var(--teal); }
+.play-dot.completed { background:var(--teal); border-color:var(--teal); }
+
+/* ═══════ SUMMARY ═══════ */
+.summary-card {
+  background: linear-gradient(135deg, rgba(38,192,187,0.1), rgba(247,78,83,0.05));
+  border:2px solid var(--teal); border-radius:var(--radius);
+  padding:2rem; text-align:center;
+  animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.summary-card h2 { font-size:1.6rem; font-weight:800; color:var(--white); margin-bottom:0.5rem; }
+.summary-card .subtitle { color:var(--mgray); margin-bottom:1.5rem; }
+.summary-decisions { display:flex; flex-direction:column; gap:0.8rem; text-align:left; margin-bottom:1.5rem; }
+.summary-decision {
+  display:flex; align-items:flex-start; gap:1rem;
+  padding:1rem; background:var(--dk); border-radius:var(--radius-sm);
+}
+.summary-decision .moment-num {
+  min-width:32px; height:32px; border-radius:50%;
+  background:var(--gold); color:var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:0.8rem;
+}
+.competencies {
+  display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-top:1rem;
+}
+.competency-tag {
+  padding:0.4rem 1rem; background:var(--dk);
+  border:1px solid var(--teal); border-radius:20px;
+  font-size:0.8rem; color:var(--teal);
+}
+
+/* ═══════ LOADING ═══════ */
+.loading-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(13,27,42,0.85); backdrop-filter:blur(8px);
+  z-index:200; align-items:center; justify-content:center;
+  flex-direction:column; gap:1.5rem;
+}
+.loading-overlay.active { display:flex; }
+.loading-spinner {
+  width:60px; height:60px; border:3px solid var(--dk);
+  border-top:3px solid var(--teal); border-radius:50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:1.1rem; color:var(--white); font-weight:600; text-align:center; }
+.loading-sub { font-size:0.85rem; color:var(--mgray); }
+.loading-dots::after {
+  content:''; animation: dots 1.5s infinite;
+}
+@keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+/* ═══════ PROMPT VIEWER ═══════ */
+.prompt-toggle {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:0.5rem 1rem;
+  background:var(--drow); border:2px solid var(--gold);
+  color:var(--gold); border-radius:var(--radius-sm);
+  font-family:var(--font); font-size:0.8rem; font-weight:600;
+  cursor:pointer; transition:all 0.3s; margin-top:1rem;
+}
+.prompt-toggle:hover { background:rgba(245,166,35,0.1); }
+.prompt-drawer {
+  display:none; margin-top:1rem;
+  background:#0A1420; border:1px solid rgba(38,192,187,0.3);
+  border-radius:var(--radius); overflow:hidden;
+  animation: fadeSlide 0.4s ease;
+}
+.prompt-drawer.open { display:block; }
+.prompt-drawer-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.7rem 1rem; background:#162535;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.prompt-drawer-header .dots { display:flex; gap:6px; }
+.prompt-drawer-header .dot { width:10px; height:10px; border-radius:50%; }
+.prompt-drawer-header .dot.r { background:var(--coral); }
+.prompt-drawer-header .dot.y { background:var(--gold); }
+.prompt-drawer-header .dot.g { background:var(--teal); }
+.prompt-copy-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:0.35rem 0.8rem; background:var(--teal); color:var(--navy);
+  border:none; border-radius:5px;
+  font-family:var(--font); font-size:0.75rem; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+}
+.prompt-copy-btn:hover { background:#2dd4c8; }
+.prompt-copy-btn.copied { background:var(--gold); }
+.prompt-drawer-body {
+  padding:1rem 1.2rem; max-height:300px; overflow-y:auto;
+}
+.prompt-drawer-body pre {
+  font-family:'Consolas','Courier New',monospace;
+  font-size:0.82rem; line-height:1.6;
+  color:var(--lgray); white-space:pre-wrap; word-wrap:break-word; margin:0;
+}
+.prompt-drawer-footer {
+  padding:0.6rem 1rem; background:#162535;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center; gap:8px;
+}
+.prompt-drawer-footer span { font-size:0.7rem; color:var(--mgray); font-style:italic; }
+.ai-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:0.2rem 0.5rem; background:rgba(38,192,187,0.15);
+  border:1px solid var(--teal); border-radius:4px;
+  font-size:0.65rem; font-weight:700; color:var(--teal);
+}
+.copy-toast {
+  position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px);
+  background:var(--teal); color:var(--navy); padding:0.75rem 1.5rem;
+  border-radius:var(--radius-sm); font-weight:700; font-size:0.9rem;
+  z-index:250; transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 8px 30px rgba(38,192,187,0.4);
+}
+.copy-toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ═══════ CONFETTI (WOW) ═══════ */
+.confetti-container {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events:none; z-index:300; overflow:hidden;
+}
+.confetti {
+  position:absolute; width:10px; height:10px;
+  top:-10px; animation:confettiFall 3s ease-in forwards;
+}
+@keyframes confettiFall {
+  0% { transform:translateY(0) rotate(0deg); opacity:1; }
+  100% { transform:translateY(100vh) rotate(720deg); opacity:0; }
+}
+
+/* ═══════ INTRO HERO ═══════ */
+.intro-hero {
+  text-align:center; padding:3rem 1rem;
+  animation: fadeSlide 0.8s ease;
+}
+.intro-hero h2 {
+  font-size:2.2rem; font-weight:800; color:var(--white);
+  margin-bottom:0.5rem; letter-spacing:-0.5px;
+}
+.intro-hero h2 span { color:var(--teal); }
+.intro-hero p { font-size:1rem; color:var(--mgray); max-width:600px; margin:0 auto 2rem; line-height:1.6; }
+
+/* ═══════ RESPONSIVE ═══════ */
+@media(max-width:768px) {
+  .phase-nav { flex-direction:column; align-items:center; }
+  .phase-tab { width:100%; border-radius:var(--radius-sm) !important; }
+  .form-grid { grid-template-columns:1fr; }
+  .refine-actions { grid-template-columns:1fr; }
+  .phase-content { padding:1rem; }
+}
+
+/* ═══════ TYPEWRITER ═══════ */
+.typewriter { overflow:hidden; white-space:nowrap; border-right:2px solid var(--teal); animation: blink 0.7s infinite; }
+@keyframes blink { 0%,100%{border-color:var(--teal)} 50%{border-color:transparent} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">AU</div>
+    <div class="brand-text">
+      <h1>SBL Designer</h1>
+      <span>Workshop Series • professordeleon.blog</span>
+    </div>
+  </div>
+  <div class="api-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Conectando...</span>
+  </div>
+</header>
+
+<!-- PHASE NAVIGATION -->
+<nav class="phase-nav">
+  <button class="phase-tab active" data-phase="1" onclick="switchPhase(1)">
+    <span class="phase-num">1</span>
+    <span>El Wizard</span>
+  </button>
+  <button class="phase-tab locked" data-phase="2" onclick="switchPhase(2)">
+    <span class="phase-num">2</span>
+    <span>El Refinador</span>
+  </button>
+  <button class="phase-tab locked" data-phase="3" onclick="switchPhase(3)">
+    <span class="phase-num">3</span>
+    <span>Vívelo</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PHASE 1: EL WIZARD -->
+<!-- ═══════════════════════════════════════ -->
+<div class="phase-content">
+  <div class="phase-panel active" id="phase1">
+    <div class="intro-hero">
+      <h2>Diseña tu <span>escenario</span> de aprendizaje</h2>
+      <p>Elige un ejemplo para empezar rápido, o completa los datos manualmente.</p>
+    </div>
+
+    <!-- PRESETS -->
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.8rem;text-align:center;">⚡ Ejemplos Listos para Generar</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0.6rem;">
+        <button class="refine-btn" onclick="loadPreset('Enfermería','Error de medicación: una enfermera administra la dosis incorrecta. El paciente parece estable pero el protocolo exige reportar. ¿Reporta y enfrenta consecuencias o espera a ver qué pasa?','Pregrado (Bachelor\'s)','Intermedia','Ramificado')" style="text-align:left;">
+          <span class="refine-icon">🩺</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Error de Medicación</div><div style="font-size:0.7rem;color:var(--mgray);">Enfermería</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Educación','Un padre furioso llega a la escuela amenazando con sacar a su hijo del programa por una mala nota. El maestro sospecha que el niño tiene problemas de aprendizaje no diagnosticados.','Certificado Profesional','Intermedia','Ramificado')" style="text-align:left;">
+          <span class="refine-icon">📚</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">El Padre Furioso</div><div style="font-size:0.7rem;color:var(--mgray);">Educación</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Gestión de Salud','El nuevo administrador de una clínica descubre que su predecesor maquillaba los reportes de calidad para pasar auditorías. Revelar la verdad podría cerrar la clínica y dejar sin empleo a 30 personas.','Maestría (Master\'s)','Avanzada','Ramificado')" style="text-align:left;">
+          <span class="refine-icon">🏥</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Fraude en Calidad</div><div style="font-size:0.7rem;color:var(--mgray);">Gestión de Salud</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Administración de Empresas','Tu cliente más grande amenaza con irse si no reduces el precio 40%. Aceptar te lleva a pérdidas. Rechazar podría costarte el 30% de tus ingresos. ¿Negocias, cedes, o lo dejas ir?','Maestría (Master\'s)','Intermedia','Ramificado')" style="text-align:left;">
+          <span class="refine-icon">💼</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Cliente Imposible</div><div style="font-size:0.7rem;color:var(--mgray);">Administración</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Tecnología de la Información','Se filtraron datos de clientes. Los logs apuntan a un compañero que es tu amigo. El CEO te pide un reporte para mañana. ¿Investigas a fondo, proteges a tu amigo, o reportas lo que tienes?','Pregrado (Bachelor\'s)','Avanzada','Ramificado')" style="text-align:left;">
+          <span class="refine-icon">💻</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Datos Filtrados</div><div style="font-size:0.7rem;color:var(--mgray);">Tecnología / IT</div></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- SIMULATION PRESETS -->
+    <div style="margin-bottom:1.5rem;margin-top:2rem;">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.8rem;text-align:center;">🎓 Simulaciones Educativas — Crea Contenido para tus Estudiantes</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0.6rem;">
+        <button class="refine-btn" onclick="loadPreset('Enfermería','Crea una simulación paso a paso de evaluación de signos vitales con un paciente virtual. Incluye perfil del paciente con una anomalía oculta, guía de procedimiento de 8 pasos con errores comunes, punto de evaluación crítico con 3 opciones, checklist de competencias y preguntas de debriefing.','Pregrado (Bachelor\'s)','Intermedia','Lineal')" style="text-align:left;border-color:var(--teal);">
+          <span class="refine-icon">🫀</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Signos Vitales</div><div style="font-size:0.7rem;color:var(--teal);">Simulación clínica</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Tecnología de la Información','Crea un lab simulado completo de configuración de red para una PYME de 25 empleados. Incluye escenario de empresa, diagrama de red con VLANs y subnetting, guía paso a paso con comandos exactos para Cisco Packet Tracer, 3 escenarios de troubleshooting, y rúbrica de evaluación.','Pregrado (Bachelor\'s)','Avanzada','Lineal')" style="text-align:left;border-color:var(--teal);">
+          <span class="refine-icon">🌐</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Config de Red</div><div style="font-size:0.7rem;color:var(--teal);">Lab técnico guiado</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Administración de Empresas','Crea una simulación de role-play de entrevista de trabajo completa. Incluye job description para un Project Manager, CV del candidato virtual con fortalezas y un red flag oculto, guión de entrevista de 25 minutos en 4 fases (rapport, preguntas STAR, situacionales, cierre), y guía del evaluador con errores comunes.','Maestría (Master\'s)','Intermedia','Lineal')" style="text-align:left;border-color:var(--teal);">
+          <span class="refine-icon">🤝</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Entrevista Role-Play</div><div style="font-size:0.7rem;color:var(--teal);">Simulación de HR</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Gestión de Salud','Crea una simulación de triage donde llegan 6 pacientes simultáneamente al ER. Para cada paciente incluye síntomas, signos vitales y clasificación ESI correcta. El estudiante debe asignar prioridad y recursos (2 médicos, 3 camas, 1 quirófano). Incluye una complicación a los 30 minutos y debrief.','Maestría (Master\'s)','Avanzada','Ramificado')" style="text-align:left;border-color:var(--teal);">
+          <span class="refine-icon">🚑</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Triage ER</div><div style="font-size:0.7rem;color:var(--teal);">Multi-paciente</div></div>
+        </button>
+        <button class="refine-btn" onclick="loadPreset('Educación','Crea una simulación de 5 días (lunes a viernes) de la primera semana como maestro nuevo en una escuela de Miami-Dade, grado 8vo. Cada día tiene un desafío diferente: establecer reglas, estudiante desafiante, plan de clase que falla, email agresivo de padre, observación sorpresa del director. Para cada día incluye briefing, 3 opciones con consecuencias, y pregunta de reflexión. Incluye rúbrica semanal.','Certificado Profesional','Intermedia','Ramificado')" style="text-align:left;border-color:var(--teal);">
+          <span class="refine-icon">🍎</span>
+          <div><div style="color:var(--white);font-weight:600;font-size:0.8rem;">Primera Semana</div><div style="font-size:0.7rem;color:var(--teal);">Simulación 5 días</div></div>
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:1.5rem 0 1rem;">
+      <span style="font-size:0.75rem;color:var(--mgray);text-transform:uppercase;letter-spacing:1px;">— o personaliza tu propio escenario abajo —</span>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Disciplina</label>
+          <select class="form-select" id="discipline">
+            <option value="Enfermería">🩺 Enfermería</option>
+            <option value="Educación">📚 Educación</option>
+            <option value="Administración de Empresas">💼 Administración de Empresas</option>
+            <option value="Gestión de Salud">🏥 Gestión de Salud</option>
+            <option value="Tecnología de la Información">💻 Tecnología de la Información</option>
+            <option value="Psicología">🧠 Psicología</option>
+            <option value="Trabajo Social">🤝 Trabajo Social</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nivel Educativo</label>
+          <select class="form-select" id="level">
+            <option value="Pregrado (Bachelor's)">Pregrado (Bachelor's)</option>
+            <option value="Maestría (Master's)">Maestría (Master's)</option>
+            <option value="Certificado Profesional">Certificado Profesional</option>
+            <option value="Doctorado">Doctorado</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Tema Específico</label>
+          <input type="text" class="form-input" id="topic" placeholder="Ej: Ética en el cuidado del paciente, Manejo de conflictos laborales, Ciberseguridad en PYMES...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Complejidad</label>
+          <select class="form-select" id="complexity">
+            <option value="Básica">Básica — decisiones claras</option>
+            <option value="Intermedia" selected>Intermedia — zonas grises</option>
+            <option value="Avanzada">Avanzada — dilemas complejos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Escenario</label>
+          <select class="form-select" id="scenarioType">
+            <option value="Lineal">Lineal — secuencia fija</option>
+            <option value="Ramificado" selected>Ramificado — múltiples caminos</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem; text-align:center;">
+        <button class="btn btn-primary" onclick="generateScenario()" id="generateBtn">
+          ✨ Generar Escenario
+        </button>
+      </div>
+    </div>
+
+    <div id="scenarioOutput"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- PHASE 2: EL REFINADOR -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="phase-panel" id="phase2">
+    <div class="intro-hero">
+      <h2>Refina tu <span>escenario</span></h2>
+      <p>Usa estos controles para transformar y mejorar tu escenario. Cada ajuste regenera el contenido con IA.</p>
+    </div>
+
+    <div class="refine-actions" id="refineActions">
+      <button class="refine-btn" onclick="quickRefine('Aumenta la complejidad del dilema. Agrega más matices éticos y zonas grises.')">
+        <span class="refine-icon">🔥</span> Más Complejo
+      </button>
+      <button class="refine-btn" onclick="quickRefine('Agrega un segundo personaje con un punto de vista opuesto que genere tensión.')">
+        <span class="refine-icon">👥</span> Agregar Personaje
+      </button>
+      <button class="refine-btn" onclick="quickRefine('Cambia el tono a más urgente y emocional. El protagonista siente la presión del tiempo.')">
+        <span class="refine-icon">⚡</span> Más Tensión
+      </button>
+      <button class="refine-btn" onclick="quickRefine('Adapta el escenario al contexto de South Florida. Incluye diversidad cultural y referencias locales.')">
+        <span class="refine-icon">🌴</span> Contexto Local
+      </button>
+      <button class="refine-btn" onclick="quickRefine('Agrega una consecuencia inesperada en la segunda decisión que cambie completamente la dinámica.')">
+        <span class="refine-icon">🎭</span> Plot Twist
+      </button>
+      <button class="refine-btn" onclick="quickRefine('Haz las consecuencias más realistas y detalladas. Incluye impacto a corto y largo plazo.')">
+        <span class="refine-icon">🎯</span> Más Realista
+      </button>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem;">
+      <div class="form-group">
+        <label class="form-label">Instrucción personalizada</label>
+        <textarea class="form-textarea" id="customRefine" placeholder="Escribe tu propia instrucción de refinamiento... Ej: 'Cambia la disciplina a psicología clínica manteniendo la misma estructura'"></textarea>
+      </div>
+      <div style="margin-top:1rem; text-align:center;">
+        <button class="btn btn-coral btn-sm" onclick="customRefineFn()">
+          🔄 Refinar con instrucción personalizada
+        </button>
+      </div>
+    </div>
+
+    <div id="refineOutput"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- PHASE 3: VÍVELO -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="phase-panel" id="phase3">
+    <div class="intro-hero" id="playIntro">
+      <h2>Vive tu <span>escenario</span></h2>
+      <p>Ahora eres el estudiante. Toma decisiones y experimenta las consecuencias en tiempo real. Siente lo que sentirá tu alumno.</p>
+      <button class="btn btn-gold" onclick="startPlay()" id="startPlayBtn">
+        ▶ Comenzar la Experiencia
+      </button>
+    </div>
+    <div class="play-container" id="playArea" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Generando escenario<span class="loading-dots"></span></div>
+  <div class="loading-sub" id="loadingSub">La IA está diseñando tu experiencia de aprendizaje</div>
+</div>
+
+<!-- CONFETTI CONTAINER -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- COPY TOAST -->
+<div class="copy-toast" id="copyToast">📋 Prompt copiado al portapapeles</div>
+
+<script>
+// ═══════ STATE ═══════
+let currentScenario = null;
+let currentPhase = 1;
+let playHistory = [];
+let playDecisionIndex = 0;
+let lastPrompt = '';   // stores the copyable prompt
+
+// ═══════ LOADING MESSAGES ═══════
+const loadingMessages = {
+  generate: [
+    { text:"Creando el personaje", sub:"Diseñando un protagonista con el que te identifiques..." },
+    { text:"Construyendo el escenario", sub:"Generando un contexto realista y envolvente..." },
+    { text:"Diseñando los dilemas", sub:"Cada decisión tendrá consecuencias significativas..." },
+    { text:"Puliendo los detalles", sub:"Asegurando coherencia pedagógica y narrativa..." },
+  ],
+  refine: [
+    { text:"Transformando el escenario", sub:"Aplicando tus instrucciones de refinamiento..." },
+    { text:"Recalibrando decisiones", sub:"Ajustando las opciones y consecuencias..." },
+  ],
+  play: [
+    { text:"Calculando consecuencias", sub:"Tu decisión tiene impacto..." },
+    { text:"Generando narrativa", sub:"Construyendo lo que sucede a continuación..." },
+  ]
+};
+
+function showLoading(type) {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.add('active');
+  const msgs = loadingMessages[type] || loadingMessages.generate;
+  let i = 0;
+  const interval = setInterval(() => {
+    if (!overlay.classList.contains('active')) { clearInterval(interval); return; }
+    const msg = msgs[i % msgs.length];
+    document.getElementById('loadingText').innerHTML = msg.text + '<span class="loading-dots"></span>';
+    document.getElementById('loadingSub').textContent = msg.sub;
+    i++;
+  }, 3000);
+  overlay._interval = interval;
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.classList.remove('active');
+  if (overlay._interval) clearInterval(overlay._interval);
+}
+
+// ═══════ API CHECK ═══════
+async function checkAPI() {
+  try {
+    const resp = await fetch('/api/health');
+    const data = await resp.json();
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    if (data.api_configured) {
+      dot.classList.add('connected');
+      text.textContent = 'Claude API conectada';
+    } else {
+      text.textContent = 'API no configurada';
+    }
+  } catch(e) {
+    document.getElementById('statusText').textContent = 'Error de conexión';
+  }
+}
+checkAPI();
+
+// ═══════ PHASE NAVIGATION ═══════
+function switchPhase(num) {
+  const tab = document.querySelector(`.phase-tab[data-phase="${num}"]`);
+  if (tab.classList.contains('locked')) return;
+  
+  document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.phase-panel').forEach(p => p.classList.remove('active'));
+  
+  tab.classList.add('active');
+  document.getElementById(`phase${num}`).classList.add('active');
+  currentPhase = num;
+}
+
+function unlockPhase(num) {
+  const tab = document.querySelector(`.phase-tab[data-phase="${num}"]`);
+  tab.classList.remove('locked');
+}
+
+function completePhase(num) {
+  const tab = document.querySelector(`.phase-tab[data-phase="${num}"]`);
+  tab.classList.add('completed');
+}
+
+// ═══════ CONFETTI ═══════
+function fireConfetti() {
+  const container = document.getElementById('confettiContainer');
+  const colors = ['#F74E53','#26C0BB','#F5A623','#FFFFFF','#E8EDF2'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 10 + 5) + 'px';
+    piece.style.height = (Math.random() * 10 + 5) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+    piece.style.animationDelay = Math.random() * 1 + 's';
+    piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => { container.innerHTML = ''; }, 4000);
+}
+
+// ═══════ RENDER SCENARIO ═══════
+function renderScenario(scenario, containerId) {
+  const container = document.getElementById(containerId);
+  if (!scenario || scenario.error) {
+    container.innerHTML = `<div class="card" style="border-left:4px solid var(--coral);"><p style="color:var(--coral);">⚠️ ${scenario?.error || 'Error al generar el escenario'}</p>${scenario?.raw_text ? `<pre style="margin-top:1rem;font-size:0.8rem;color:var(--mgray);white-space:pre-wrap;">${scenario.raw_text}</pre>` : ''}</div>`;
+    return;
+  }
+
+  const initials = (scenario.personaje?.nombre || 'P').split(' ').map(w=>w[0]).join('').slice(0,2);
+  
+  let decisionsHTML = '';
+  (scenario.decisiones || []).forEach((d, i) => {
+    let optionsHTML = '';
+    (d.opciones || []).forEach(o => {
+      optionsHTML += `
+        <div class="option-item">
+          <span class="option-badge">${o.id}</span>
+          <div>
+            <div style="color:var(--white);font-weight:500;">${o.texto}</div>
+          </div>
+        </div>`;
+    });
+    decisionsHTML += `
+      <div class="decision-moment">
+        <h4>📍 Momento ${d.momento || i+1}</h4>
+        <div class="context">${d.contexto}</div>
+        <div class="question">${d.pregunta}</div>
+        <div class="options-list">${optionsHTML}</div>
+      </div>`;
+  });
+
+  let competenciesHTML = '';
+  (scenario.competencias_desarrolladas || []).forEach(c => {
+    competenciesHTML += `<span class="competency-tag">${c}</span>`;
+  });
+
+  container.innerHTML = `
+    <div class="scenario-card">
+      <div class="scenario-header">
+        <span class="tag">✨ Escenario Generado por IA</span>
+        <h2>${scenario.titulo || 'Escenario'}</h2>
+      </div>
+      <div class="scenario-body">
+        <div class="character-card">
+          <div class="character-avatar">${initials}</div>
+          <div class="character-info">
+            <h4>${scenario.personaje?.nombre || ''}</h4>
+            <p>${scenario.personaje?.rol || ''} — ${scenario.personaje?.contexto || ''}</p>
+          </div>
+        </div>
+        
+        <div class="scenario-section" style="margin-top:1.2rem;">
+          <h3>🌍 Ambientación</h3>
+          <p>${scenario.ambientacion || ''}</p>
+        </div>
+        
+        <div class="scenario-section">
+          <h3>📋 Situación Inicial</h3>
+          <p>${scenario.situacion_inicial || ''}</p>
+        </div>
+        
+        <div class="scenario-section">
+          <h3>🎯 Objetivo de Aprendizaje</h3>
+          <p>${scenario.objetivo_aprendizaje || ''}</p>
+        </div>
+        
+        <div class="scenario-section">
+          <h3>🔀 Puntos de Decisión</h3>
+          <div class="decisions-grid">${decisionsHTML}</div>
+        </div>
+        
+        <div class="scenario-section">
+          <h3>💡 Reflexión Final</h3>
+          <p>${scenario.reflexion_final || ''}</p>
+        </div>
+        
+        ${competenciesHTML ? `<div class="scenario-section"><h3>🏆 Competencias Desarrolladas</h3><div class="competencies">${competenciesHTML}</div></div>` : ''}
+      </div>
+    </div>`;
+}
+
+// ═══════ PROMPT VIEWER ═══════
+function renderPromptViewer(promptText, containerId) {
+  // Highlight section headers in the prompt
+  const highlighted = promptText
+    .replace(/^(# .+)$/gm, '<span style="color:#26C0BB;font-weight:700;">$1</span>')
+    .replace(/^(- .+)$/gm, '<span style="color:#E8EDF2;">$1</span>');
+
+  return `
+    <button class="prompt-toggle" onclick="togglePromptDrawer('${containerId}')">
+      📋 Ver Prompt Utilizado — Copia y usa en cualquier IA
+    </button>
+    <div class="prompt-drawer" id="drawer-${containerId}">
+      <div class="prompt-drawer-header">
+        <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+        <div style="font-size:0.75rem;color:var(--mgray);">prompt-generado.txt</div>
+        <button class="prompt-copy-btn" onclick="copyPrompt('${containerId}')">📋 Copiar Prompt</button>
+      </div>
+      <div class="prompt-drawer-body">
+        <pre id="prompt-text-${containerId}">${highlighted}</pre>
+      </div>
+      <div class="prompt-drawer-footer">
+        <span class="ai-badge">🤖 Compatible</span>
+        <span>Funciona en Claude AI, ChatGPT, Gemini y cualquier LLM</span>
+      </div>
+    </div>`;
+}
+
+function togglePromptDrawer(id) {
+  const drawer = document.getElementById('drawer-' + id);
+  drawer.classList.toggle('open');
+}
+
+function copyPrompt(id) {
+  // Get raw text (without HTML tags)
+  const el = document.getElementById('prompt-text-' + id);
+  const text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    // Show toast
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+    // Animate button
+    const btn = el.closest('.prompt-drawer').querySelector('.prompt-copy-btn');
+    if (btn) {
+      btn.innerHTML = '✅ Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = '📋 Copiar Prompt'; btn.classList.remove('copied'); }, 2000);
+    }
+  });
+}
+
+// ═══════ PRESETS ═══════
+function loadPreset(discipline, topic, level, complexity, scenarioType) {
+  document.getElementById('discipline').value = discipline;
+  document.getElementById('topic').value = topic;
+  document.getElementById('level').value = level;
+  document.getElementById('complexity').value = complexity;
+  document.getElementById('scenarioType').value = scenarioType;
+  
+  // Scroll to form and highlight the topic field briefly
+  document.getElementById('topic').scrollIntoView({ behavior:'smooth', block:'center' });
+  document.getElementById('topic').style.borderColor = 'var(--teal)';
+  setTimeout(() => { document.getElementById('topic').style.borderColor = ''; }, 1500);
+  
+  // Auto-generate
+  generateScenario();
+}
+
+// ═══════ PHASE 1: GENERATE ═══════
+async function generateScenario() {
+  const topic = document.getElementById('topic').value.trim();
+  if (!topic) {
+    document.getElementById('topic').style.borderColor = 'var(--coral)';
+    document.getElementById('topic').focus();
+    return;
+  }
+  document.getElementById('topic').style.borderColor = '';
+  
+  const payload = {
+    discipline: document.getElementById('discipline').value,
+    topic: topic,
+    level: document.getElementById('level').value,
+    complexity: document.getElementById('complexity').value,
+    scenario_type: document.getElementById('scenarioType').value,
+  };
+
+  document.getElementById('generateBtn').disabled = true;
+  showLoading('generate');
+
+  try {
+    const resp = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    hideLoading();
+    
+    currentScenario = data;
+    // Extract prompt before rendering scenario
+    let genPrompt = '';
+    if (data._prompt) {
+      genPrompt = data._prompt;
+      delete data._prompt;
+    }
+    renderScenario(data, 'scenarioOutput');
+    
+    if (!data.error) {
+      // Render the copyable prompt viewer
+      if (genPrompt) {
+        lastPrompt = genPrompt;
+        const promptHTML = renderPromptViewer(lastPrompt, 'gen');
+        document.getElementById('scenarioOutput').insertAdjacentHTML('beforeend', promptHTML);
+      }
+      
+      fireConfetti();
+      unlockPhase(2);
+      unlockPhase(3);
+      completePhase(1);
+      
+      // Auto-scroll to result
+      document.getElementById('scenarioOutput').scrollIntoView({ behavior:'smooth', block:'start' });
+    }
+  } catch(e) {
+    hideLoading();
+    document.getElementById('scenarioOutput').innerHTML = `<div class="card" style="border-left:4px solid var(--coral);"><p style="color:var(--coral);">⚠️ Error de conexión: ${e.message}</p></div>`;
+  }
+  document.getElementById('generateBtn').disabled = false;
+}
+
+// ═══════ PHASE 2: REFINE ═══════
+async function quickRefine(instruction) {
+  if (!currentScenario) return;
+  showLoading('refine');
+
+  try {
+    const resp = await fetch('/api/refine', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario: currentScenario, instruction })
+    });
+    const data = await resp.json();
+    hideLoading();
+    
+    if (!data.error) {
+      currentScenario = data;
+      if (data._prompt) {
+        lastPrompt = data._prompt;
+        delete currentScenario._prompt;
+      }
+      renderScenario(data, 'refineOutput');
+      if (lastPrompt) {
+        const promptHTML = renderPromptViewer(lastPrompt, 'ref-' + Date.now());
+        document.getElementById('refineOutput').insertAdjacentHTML('beforeend', promptHTML);
+      }
+      fireConfetti();
+      document.getElementById('refineOutput').scrollIntoView({ behavior:'smooth', block:'start' });
+    } else {
+      renderScenario(data, 'refineOutput');
+    }
+  } catch(e) {
+    hideLoading();
+    document.getElementById('refineOutput').innerHTML = `<div class="card" style="border-left:4px solid var(--coral);"><p style="color:var(--coral);">⚠️ Error: ${e.message}</p></div>`;
+  }
+}
+
+function customRefineFn() {
+  const instruction = document.getElementById('customRefine').value.trim();
+  if (!instruction) return;
+  quickRefine(instruction);
+}
+
+// ═══════ PHASE 3: PLAY ═══════
+function startPlay() {
+  if (!currentScenario || !currentScenario.decisiones) return;
+  playHistory = [];
+  playDecisionIndex = 0;
+  
+  document.getElementById('playIntro').style.display = 'none';
+  document.getElementById('playArea').style.display = 'block';
+  
+  renderPlayDecision(0);
+}
+
+function renderPlayDecision(index) {
+  const area = document.getElementById('playArea');
+  const decisions = currentScenario.decisiones;
+  
+  if (index >= decisions.length) {
+    renderPlaySummary();
+    return;
+  }
+  
+  const d = decisions[index];
+  
+  // Progress dots
+  let dotsHTML = '';
+  decisions.forEach((_, i) => {
+    const cls = i < index ? 'completed' : (i === index ? 'active' : '');
+    dotsHTML += `<div class="play-dot ${cls}"></div>`;
+  });
+  
+  // Build narrative intro
+  let narrativeHTML = '';
+  if (playHistory.length > 0) {
+    const last = playHistory[playHistory.length - 1];
+    narrativeHTML = `
+      <div class="play-narrative">
+        ${last.emotion ? `<span class="emotion-badge">${last.emotion}</span>` : ''}
+        <p>${last.narrativa || last.resultado}</p>
+        ${last.leccion ? `<div class="lesson">💡 ${last.leccion}</div>` : ''}
+      </div>`;
+  } else {
+    narrativeHTML = `
+      <div class="play-narrative">
+        <span class="emotion-badge">🎬 INICIO</span>
+        <p><strong>${currentScenario.personaje?.nombre}</strong> — ${currentScenario.personaje?.contexto}</p>
+        <p style="margin-top:0.5rem;">${currentScenario.ambientacion}</p>
+        <p style="margin-top:0.5rem;">${currentScenario.situacion_inicial}</p>
+      </div>`;
+  }
+  
+  // Choices
+  let choicesHTML = '';
+  (d.opciones || []).forEach(o => {
+    choicesHTML += `
+      <div class="play-choice" onclick="makeChoice(${index}, '${o.id}')">
+        <span class="play-choice-letter">${o.id}</span>
+        <span class="play-choice-text">${o.texto}</span>
+      </div>`;
+  });
+  
+  area.innerHTML = `
+    <div class="play-progress">${dotsHTML}</div>
+    ${narrativeHTML}
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="font-size:0.75rem;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.5rem;">
+        📍 Momento ${d.momento || index+1} de ${decisions.length}
+      </div>
+      <p style="color:var(--mgray);margin-bottom:0.8rem;">${d.contexto}</p>
+      <p style="color:var(--white);font-weight:600;font-size:1.1rem;margin-bottom:1rem;">${d.pregunta}</p>
+      <div class="play-choices">${choicesHTML}</div>
+    </div>`;
+  
+  area.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function makeChoice(decisionIndex, choiceId) {
+  const decision = currentScenario.decisiones[decisionIndex];
+  const chosen = decision.opciones.find(o => o.id === choiceId);
+  
+  // Disable choices immediately
+  document.querySelectorAll('.play-choice').forEach(c => {
+    c.style.pointerEvents = 'none';
+    c.style.opacity = '0.5';
+  });
+  // Highlight chosen
+  const chosenEl = document.querySelectorAll('.play-choice')[decision.opciones.indexOf(chosen)];
+  if (chosenEl) {
+    chosenEl.style.opacity = '1';
+    chosenEl.style.borderColor = 'var(--teal)';
+    chosenEl.style.background = 'rgba(38,192,187,0.1)';
+  }
+  
+  showLoading('play');
+  
+  try {
+    const resp = await fetch('/api/play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scenario: currentScenario,
+        decision_index: decisionIndex,
+        choice_id: choiceId,
+        history: playHistory
+      })
+    });
+    const data = await resp.json();
+    hideLoading();
+    
+    playHistory.push({
+      momento: decisionIndex + 1,
+      opcion: chosen.texto,
+      opcion_id: choiceId,
+      resultado: chosen.consecuencia,
+      narrativa: data.narrativa || chosen.consecuencia,
+      leccion: data.leccion || chosen.feedback_pedagogico,
+      emotion: data.emocion || '',
+      es_optima: chosen.es_optima
+    });
+    
+    playDecisionIndex = decisionIndex + 1;
+    
+    // Small delay for dramatic effect
+    setTimeout(() => {
+      renderPlayDecision(playDecisionIndex);
+    }, 500);
+    
+  } catch(e) {
+    hideLoading();
+    // Fallback: use static data
+    playHistory.push({
+      momento: decisionIndex + 1,
+      opcion: chosen.texto,
+      opcion_id: choiceId,
+      resultado: chosen.consecuencia,
+      leccion: chosen.feedback_pedagogico,
+      emotion: '',
+      es_optima: chosen.es_optima
+    });
+    playDecisionIndex = decisionIndex + 1;
+    renderPlayDecision(playDecisionIndex);
+  }
+}
+
+function renderPlaySummary() {
+  const area = document.getElementById('playArea');
+  fireConfetti();
+  
+  let decisionsHTML = '';
+  playHistory.forEach((h, i) => {
+    const optimalIcon = h.es_optima ? '✅' : '⚠️';
+    decisionsHTML += `
+      <div class="summary-decision">
+        <span class="moment-num">${h.momento}</span>
+        <div>
+          <div style="color:var(--white);font-weight:600;">${optimalIcon} ${h.opcion}</div>
+          <div style="color:var(--mgray);font-size:0.85rem;margin-top:0.3rem;">${h.leccion || h.resultado}</div>
+        </div>
+      </div>`;
+  });
+  
+  const optimal = playHistory.filter(h => h.es_optima).length;
+  const total = playHistory.length;
+  const score = Math.round((optimal / total) * 100);
+  
+  let competenciesHTML = '';
+  (currentScenario.competencias_desarrolladas || []).forEach(c => {
+    competenciesHTML += `<span class="competency-tag">${c}</span>`;
+  });
+  
+  area.innerHTML = `
+    <div class="summary-card">
+      <h2>🎓 Experiencia Completada</h2>
+      <p class="subtitle">${currentScenario.titulo}</p>
+      <div style="font-size:2.5rem;font-weight:800;color:${score >= 66 ? 'var(--teal)' : 'var(--gold)'};margin:1rem 0;">
+        ${score}%
+      </div>
+      <p style="color:var(--mgray);margin-bottom:1.5rem;">${optimal} de ${total} decisiones óptimas</p>
+      
+      <div class="summary-decisions">${decisionsHTML}</div>
+      
+      <div class="scenario-section" style="text-align:left;margin-top:1.5rem;">
+        <h3 style="font-size:0.8rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:0.4rem;">💡 Reflexión</h3>
+        <p style="font-size:0.95rem;color:var(--lgray);line-height:1.6;">${currentScenario.reflexion_final || ''}</p>
+      </div>
+      
+      ${competenciesHTML ? `<div style="margin-top:1rem;"><div class="competencies">${competenciesHTML}</div></div>` : ''}
+      
+      <div style="margin-top:2rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="restartPlay()">▶ Jugar de Nuevo</button>
+        <button class="btn btn-ghost" onclick="switchPhase(2)">🔄 Refinar Escenario</button>
+      </div>
+    </div>`;
+  
+  area.scrollIntoView({ behavior:'smooth', block:'start' });
+  completePhase(3);
+}
+
+function restartPlay() {
+  document.getElementById('playIntro').style.display = 'block';
+  document.getElementById('playArea').style.display = 'none';
+  playHistory = [];
+  playDecisionIndex = 0;
+}
+
+// ═══════ INIT ═══════
+document.getElementById('topic').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') generateScenario();
+});
+</script>
+</body>
+</html>
